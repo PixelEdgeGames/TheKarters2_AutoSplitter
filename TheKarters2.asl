@@ -2,82 +2,60 @@ state("TheKarters2") {}
 
 startup
 {
-    vars.Log = (Action<object>)(output => print("[] " + output));
-    vars.Unity = Assembly.Load(File.ReadAllBytes(@"Components\UnityASL.bin")).CreateInstance("UnityASL.Unity");
+    Assembly.Load(File.ReadAllBytes("Components/asl-help")).CreateInstance("Unity");
 }
 
 init
 {
-    vars.Unity.TryOnLoad = (Func<dynamic, bool>)(helper =>
-    {
-        var myClass = helper.GetClass("Assembly-CSharp", "AutosplitData");
+	vars.Helper.TryLoad = (Func<dynamic, bool>)(mono =>
+	{
+		var asd = mono["AutosplitData"]; // Get class `AutosplitData` from `Assembly-CSharp`.
 
-        vars.Unity.MakeString(myClass.Static, myClass["strChallengeNrText"]).Name = "strChallengeNrText";
-        vars.Unity.Make<int>(myClass.Static, myClass["iChallengeNr"]).Name = "iChallengeNr";
-        vars.Unity.MakeString(myClass.Static, myClass["strTrackName"]).Name = "strTrackName";
-		
-        vars.Unity.Make<int>(myClass.Static, myClass["iChallengeCupRoundNr"]).Name = "iChallengeCupRoundNr";
-        vars.Unity.Make<int>(myClass.Static, myClass["iChallengeCupRoundsCount"]).Name = "iChallengeCupRoundsCount";
-        
-        vars.Unity.Make<float>(myClass.Static, myClass["totalPlaytime"]).Name = "totalPlaytime";
-        vars.Unity.Make<float>(myClass.Static, myClass["testTime"]).Name = "testTime";
-        vars.Unity.Make<bool>(myClass.Static, myClass["bFinishedSuccessfully"]).Name = "bFinishedSuccessfully";
-        vars.Unity.Make<bool>(myClass.Static, myClass["bIsRaceRunning"]).Name = "bIsRaceRunning";
-        vars.Unity.Make<float>(myClass.Static, myClass["fRaceTime"]).Name = "fRaceTime";
-        vars.Unity.Make<float>(myClass.Static, myClass["fLap1Time"]).Name = "fLap1Time";
-        vars.Unity.Make<float>(myClass.Static, myClass["fLap2Time"]).Name = "fLap2Time";
-        vars.Unity.Make<float>(myClass.Static, myClass["fLap3Time"]).Name = "fLap3Time";
+		// vars.Helper["ChallengeNrText"] = asd.MakeString("strChallengeNrText");
+		// vars.Helper["ChallengeNr"] = asd.Make<int>("iChallengeNr");
+		// vars.Helper["TrackName"] = asd.MakeString("strTrackName");
 
-        return true;
-    });
+		// vars.Helper["ChallengeCupRoundNr"] = asd.Make<int>("iChallengeCupRoundNr");
+		// vars.Helper["ChallengeCupRoundsCount"] = asd.Make<int>("iChallengeCupRoundsCount");
 
-    vars.Unity.Load(game);
-}
+		vars.Helper["TotalPlaytime"] = asd.Make<float>("totalPlaytime");
+		// vars.Helper["TestTime"] = asd.Make<float>("testTime");
+		vars.Helper["FinishedSuccessfully"] = asd.Make<bool>("bFinishedSuccessfully");
+		vars.Helper["IsRaceRunning"] = asd.Make<bool>("bIsRaceRunning");
+		vars.Helper["RaceTime"] = asd.Make<float>("fRaceTime");
+		// vars.Helper["Lap1Time"] = asd.Make<float>("fLap1Time");
+		// vars.Helper["Lap2Time"] = asd.Make<float>("fLap2Time");
+		// vars.Helper["Lap3Time"] = asd.Make<float>("fLap3Time");
 
-update
-{
-    if (!vars.Unity.Loaded) return false;
-
-    vars.Unity.Update();
+		return true;
+	});
 }
 
 start
 {
-        return vars.Unity["bIsRaceRunning"].Current;
+        return !old.IsRaceRunning && current.IsRaceRunning;
 }
 
 split
 {
 	// If you finished the final level, that's the final split
-	if (vars.Unity["bFinishedSuccessfully"].Changed && vars.Unity["bFinishedSuccessfully"].Current == true) // level 101's index is 100.
+	if (!old.FinishedSuccessfully && current.FinishedSuccessfully) // level 101's index is 100.
 	{
-		//return true;
+		// return true;
 	}
 	
 	return false;
 }
 
-isLoading
-{
-    return vars.Unity["bIsRaceRunning"].Current == false || vars.Unity["fRaceTime"].Changed == false  || vars.Unity["fRaceTime"].Current == 0;
-}
-
-
-
 reset 
 {
-    /* If you're in the main menu with a playtime of 0, you probably just reset your save file,
-    * and you definitely aren't in a current run, so reset the timer.
-    */
-    return vars.Unity["totalPlaytime"].Current == 0;
+	/* If you're in the main menu with a playtime of 0, you probably just reset your save file,
+	* and you definitely aren't in a current run, so reset the timer.
+	*/
+	return old.TotalPlaytime > 0f && current.TotalPlaytime == 0f;
 }
 
-exit
+isLoading
 {
-    vars.Unity.Reset();
-}
-
-shutdown
-{
-    vars.Unity.Reset();
+	return !current.IsRaceRunning || old.RaceTime == current.RaceTime || current.RaceTime == 0;
 }
