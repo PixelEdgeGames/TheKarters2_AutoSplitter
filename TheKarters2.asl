@@ -22,6 +22,7 @@ init
 		// vars.Helper["TestTime"] = asd.Make<float>("testTime");
 		vars.Helper["FinishedSuccessfully"] = asd.Make<bool>("bFinishedSuccessfully");
 		vars.Helper["IsRaceRunning"] = asd.Make<bool>("bIsRaceRunning");
+		vars.Helper["bIsPaused"] = asd.Make<bool>("bIsPaused");
 		vars.Helper["RaceTime"] = asd.Make<float>("fRaceTime");
 		// vars.Helper["Lap1Time"] = asd.Make<float>("fLap1Time");
 		// vars.Helper["Lap2Time"] = asd.Make<float>("fLap2Time");
@@ -57,5 +58,5 @@ reset
 
 isLoading
 {
-	return !current.IsRaceRunning || current.RaceTime == 0;
+	return !current.IsRaceRunning || current.RaceTime == 0 || current.bIsPaused == true;
 }
