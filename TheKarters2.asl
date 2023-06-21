@@ -58,5 +58,5 @@ reset
 
 isLoading
 {
-	return !current.IsRaceRunning || current.RaceTime == 0 || current.bIsPaused == true;
+	return !current.IsRaceRunning || current.RaceTime == 0 ;
 }
